@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion Real Estate | Detail View</title>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: #0a0a0a;
+            --accent: #d4af37;
+            --accent-soft: rgba(212, 175, 55, 0.1);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+
+        /* --- MODAL OVERLAY --- */
+        .detail-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 9999;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+            margin: auto;        }
+
+        .detail-container {
+            max-width: 1100px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+
+        .detail-layout { display: grid; grid-template-columns: 1.2fr 0.8fr; }
+
+        /* --- RESPONSIVE BREAKPOINT --- */
+        @media (max-width: 900px) {
+            .detail-overlay { padding: 0; } /* Edge to edge on mobile */
+            .detail-container { margin: 0; border-radius: 0; min-height: 100vh; }
+            .detail-layout { grid-template-columns: 1fr; }
+            .detail-visuals { border-right: none !important; padding: 20px !important; }
+            .detail-info { padding: 20px !important; }
+            .slider-container { height: 300px !important; border-radius: 15px !important; }
+            .close-modal { top: 15px !important; right: 15px !important; background: rgba(0,0,0,0.5) !important; backdrop-filter: blur(5px); }
+            
+            /* Pin action card to bottom on mobile for better conversion */
+            .buy-action-card {
+                position: sticky;
+                bottom: 15px;
+                z-index: 10;
+                box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+                margin-top: 30px;
+            }
+        }
+
+        /* --- LEFT SIDE: VISUALS --- */
+        .detail-visuals { padding: 40px; border-right: 1px solid var(--glass-border); }
+        
+        .slider-container {
+            position: relative;
+            height: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 30px;
+        }
+
+        .slider img {
+            width: 100%; height: 100%; object-fit: cover;
+            display: none; transition: 0.5s;
+        }
+        .slider img.active { display: block; animation: scaleUp 0.6s ease; }
+
+        .slider-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.5); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            z-index: 10; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+        .slider-btn:hover { background: var(--accent); color: black; }
+        .next { right: 15px; } .prev { left: 15px; }
+
+        .doc-cta {
+            display: flex; align-items: center; gap: 15px; padding: 18px;
+            background: var(--glass); border: 1px solid var(--accent-soft);
+            border-radius: 15px; text-decoration: none; color: white;
+            transition: 0.3s; margin-top: 10px;
+        }
+        .doc-cta:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+        .map-box {
+            width: 100%; height: 180px; background: #111;
+            border-radius: 20px; border: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 10px; overflow: hidden;
+        }
+
+        /* --- RIGHT SIDE: INFO --- */
+        .detail-info { padding: 40px; display: flex; flex-direction: column; }
+        
+        .premium-label { color: var(--accent); font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
+        
+        .specs-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            padding: 20px 0; margin: 20px 0;
+            border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+        }
+        .spec-item { text-align: center; color: var(--text-dim); font-size: 0.75rem; }
+        .spec-item i { display: block; color: var(--accent); font-size: 1.2rem; margin-bottom: 5px; }
+
+        .fractional-card {
+            background: var(--accent-soft); border: 1px dashed var(--accent);
+            padding: 20px; border-radius: 20px; margin-top: 20px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; height: 5px;
+            background: var(--glass-border); border-radius: 5px; margin: 15px 0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px;
+            border-radius: 50%; background: var(--accent); cursor: pointer;
+        }
+
+        .buy-action-card {
+            margin-top: auto; padding: 25px; background: var(--glass);
+            border-radius: 24px; display: flex; justify-content: space-between; align-items: center;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: var(--accent); color: black; border: none;
+            padding: 15px 25px; border-radius: 12px; font-weight: 800; cursor: pointer;
+            transition: 0.3s; white-space: nowrap;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px var(--accent-soft); }
+
+        .close-modal {
+            position: absolute; top: 25px; right: 25px; background: var(--glass);
+            border: none; color: white; width: 40px; height: 40px;
+            border-radius: 50%; cursor: pointer; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { transform: scale(1.05); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <button onclick="openProperty(1)" style="margin: 50px; padding: 15px; background: var(--accent); border: none; cursor: pointer; font-weight: bold;">View Property (Demo)</button>
+
+    <div id="property-modal" class="detail-overlay">
+        <div class="detail-container">
+            <button class="close-modal" onclick="closeModal()"><i class="ph ph-x"></i></button>
+
+            <div class="detail-layout">
+                <div class="detail-visuals">
+                    <div class="slider-container">
+                        <div id="modal-slider" class="slider"></div>
+                        <button class="slider-btn prev" onclick="changeSlide(-1)"><i class="ph ph-caret-left"></i></button>
+                        <button class="slider-btn next" onclick="changeSlide(1)"><i class="ph ph-caret-right"></i></button>
+                    </div>
+
+                    <div class="doc-section">
+                        <p class="premium-label">VERIFICATION</p>
+                        <a href="#" class="doc-cta">
+                            <i class="ph ph-file-pdf" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <span style="display:block; font-size:0.9rem; font-weight:600;">Certificate of Occupancy</span>
+                                <span style="font-size:0.7rem; color:var(--text-dim);">Document ID: #ORN-7721-LKS</span>
+                            </div>
+                            <i class="ph ph-seal-check" style="color:var(--accent); margin-left:auto; font-size: 1.2rem;"></i>
+                        </a>
+                    </div>
+
+                    <div class="map-section" style="margin-top:25px;">
+                        <p class="premium-label">LOCATION MAP</p>
+                        <div class="map-box">
+                            <i class="ph ph-map-trifold" style="font-size:2rem; color:var(--glass-border);"></i>
+                            <span style="margin-left:10px; color:var(--text-dim); font-size:0.8rem;">Map View: <span id="m-loc-text">Lekki, Lagos</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-info">
+                    <span id="m-cat" class="premium-label">CATEGORY</span>
+                    <h1 id="m-name" style="margin:10px 0; font-size:1.8rem;">Property Name</h1>
+                    <p id="m-loc" style="color:var(--text-dim); font-size:0.9rem;"><i class="ph ph-map-pin"></i> Location</p>
+
+                    <div class="specs-grid">
+                        <div class="spec-item"><i class="ph ph-bed"></i><span id="m-beds">4 Beds</span></div>
+                        <div class="spec-item"><i class="ph ph-bathtub"></i><span id="m-baths">3 Baths</span></div>
+                        <div class="spec-item"><i class="ph ph-selection-all"></i><span id="m-sqft">1,500 sqft</span></div>
+                    </div>
+
+                    <div id="fractional-ui" class="fractional-card" style="display:none;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="premium-label">OWNERSHIP SHARE</span>
+                            <span id="share-display" style="color:var(--accent); font-weight:900;">10%</span>
+                        </div>
+                        <input type="range" id="share-slider" min="1" max="100" value="10" oninput="updatePrice()">
+                        <p style="font-size:0.65rem; color:var(--text-dim);">Select percentage of the property you wish to own.</p>
+                    </div>
+
+                    <div class="description" style="margin-top:25px;">
+                        <h4 style="margin-bottom:10px;">The Asset</h4>
+                        <p id="m-desc" style="font-size:0.85rem; color:var(--text-dim); line-height:1.6;"></p>
+                    </div>
+
+                    <div class="buy-action-card">
+                        <div>
+                            <p style="font-size:0.6rem; color:var(--accent); font-weight:800; letter-spacing:1px;">TOTAL INVESTMENT</p>
+                            <h2 id="m-price" style="margin: 5px 0 0 0; font-size: 1.4rem;">₦0.00</h2>
+                        </div>
+                        <button class="btn-primary" onclick="alert('Proceeding to Checkout...')">SECURE ASSET</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const propertyData = [
+            {
+                id: 1,
+                name: "Azure Heights Estate",
+                cat: "Residential",
+                loc: "Lekki Phase 1, Lagos",
+                price: 45000000,
+                beds: 4, baths: 3, sqft: "1,500",
+                isFractional: true,
+                minShare: 5,
+                desc: "High-yield residential asset in Lagos' prime district. Features modern architecture, 24/7 security, and high rental demand.",
+                images: [
+                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format",
+                    "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format"
+                ]
+            }
+        ];
+
+        let currentImgIndex = 0;
+        let activeAsset = null;
+
+        function openProperty(id) {
+            activeAsset = propertyData.find(p => p.id === id);
+            if(!activeAsset) return;
+
+            document.getElementById('m-name').innerText = activeAsset.name;
+            document.getElementById('m-cat').innerText = activeAsset.cat.toUpperCase();
+            document.getElementById('m-loc').innerHTML = `<i class="ph ph-map-pin"></i> ${activeAsset.loc}`;
+            document.getElementById('m-loc-text').innerText = activeAsset.loc;
+            document.getElementById('m-beds').innerText = activeAsset.beds + " Beds";
+            document.getElementById('m-baths').innerText = activeAsset.baths + " Baths";
+            document.getElementById('m-sqft').innerText = activeAsset.sqft + " sqft";
+            document.getElementById('m-desc').innerText = activeAsset.desc;
+
+            const fracUI = document.getElementById('fractional-ui');
+            if(activeAsset.isFractional) {
+                fracUI.style.display = 'block';
+                document.getElementById('share-slider').min = activeAsset.minShare;
+                document.getElementById('share-slider').value = activeAsset.minShare;
+                updatePrice();
+            } else {
+                fracUI.style.display = 'none';
+                document.getElementById('m-price').innerText = `₦${activeAsset.price.toLocaleString()}`;
+            }
+
+            const slider = document.getElementById('modal-slider');
+            slider.innerHTML = activeAsset.images.map((img, i) => `
+                <img src="${img}" class="${i === 0 ? 'active' : ''}">
+            `).join('');
+
+            currentImgIndex = 0;
+            document.getElementById('property-modal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        function updatePrice() {
+            const share = document.getElementById('share-slider').value;
+            const price = activeAsset.price * (share / 100);
+            document.getElementById('share-display').innerText = share + "% Share";
+            document.getElementById('m-price').innerText = `₦${price.toLocaleString()}`;
+        }
+
+        function changeSlide(dir) {
+            const imgs = document.querySelectorAll('#modal-slider img');
+            if(imgs.length === 0) return;
+            imgs[currentImgIndex].classList.remove('active');
+            currentImgIndex = (currentImgIndex + dir + imgs.length) % imgs.length;
+            imgs[currentImgIndex].classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('property-modal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Re-enable scroll
+        }
+    </script>
+</body>
+</html>

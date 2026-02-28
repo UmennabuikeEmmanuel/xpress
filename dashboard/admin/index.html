@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Dashboard</title>
+    <style>
+        body{font-family:Inter,system-ui; background:#050505;color:#fff;padding:24px}
+        a{color:#d4af37;text-decoration:none}
+        .card{background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);padding:20px;border-radius:12px;margin-bottom:12px}
+        .nav{display:flex;gap:12px;margin-bottom:20px}
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;">
+        <div class="nav">
+            <a href="users.html">Users</a>
+            <a href="transactions.html">Transactions</a>
+            <a href="escrows.html">Escrows</a>
+        </div>
+        <div>
+            <input id="admin-token" placeholder="Admin Token" style="padding:8px;border-radius:6px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);color:#fff">
+            <button id="save-token" style="background:#d4af37;border:none;padding:8px 10px;border-radius:6px;cursor:pointer">Save</button>
+        </div>
+    </div>
+
+    <div id="summary" class="card">
+        <p>Loading summary...</p>
+    </div>
+
+<script>
+const API = 'http://localhost:8000/api';
+async function loadSummary(){
+    try{
+        const headers = { 'x-admin-token': localStorage.getItem('orion_admin_token') || '' };
+        const [uRes, tRes, eRes] = await Promise.all([
+            fetch(`${API}/admin/users`, { headers }),
+            fetch(`${API}/admin/transactions`, { headers }),
+            fetch(`${API}/admin/escrows`, { headers })
+        ]);
+        const users = await uRes.json();
+        const txs = await tRes.json();
+        const esc = await eRes.json();
+        document.getElementById('summary').innerHTML = `
+            <strong>Users:</strong> ${users.data.length} <br>
+            <strong>Transactions:</strong> ${txs.data.length} <br>
+            <strong>Escrows:</strong> ${esc.data.length}
+        `;
+    }catch(e){
+        document.getElementById('summary').innerText = 'Failed to load summary';
+    }
+}
+loadSummary();
+document.getElementById('save-token').addEventListener('click', ()=>{
+    const val = document.getElementById('admin-token').value;
+    if(!val) return alert('Enter a token');
+    localStorage.setItem('orion_admin_token', val);
+    alert('Token saved to localStorage');
+});
+// populate input if already set
+document.getElementById('admin-token').value = localStorage.getItem('orion_admin_token') || '';
+</script>
+</body>
+</html>

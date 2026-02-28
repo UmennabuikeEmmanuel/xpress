@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin - Users</title>
+    <style>
+        body{font-family:Inter,system-ui; background:#050505;color:#fff;padding:24px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+        a{color:#d4af37}
+    </style>
+</head>
+<body>
+    <a href="index.html">← Back</a>
+    <h2>Users</h2>
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+        <input id="q" placeholder="Search users..." style="padding:8px;border-radius:6px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);color:#fff">
+        <select id="perpage"><option>10</option><option selected>20</option><option>50</option></select>
+    </div>
+    <div id="container">Loading users...</div>
+<script>
+const API = 'http://localhost:8000/api';
+async function loadUsers(){
+    try{
+        const res = await fetch(`${API}/admin/users`, { headers: { 'x-admin-token': localStorage.getItem('orion_admin_token') || '' } });
+        const data = await res.json();
+        const users = data.data;
+        window._admin_users = users;
+        renderUsers();
+    }catch(e){document.getElementById('container').innerText='Failed to load users'}
+}
+
+function renderUsers(page=1){
+    const q = (document.getElementById('q').value||'').toLowerCase();
+    const per = parseInt(document.getElementById('perpage').value||20,10);
+    const users = (window._admin_users || []).filter(u => (`${u.email} ${u.id}`).toLowerCase().includes(q));
+    const start = (page-1)*per; const pageItems = users.slice(start, start+per);
+    const html = `
+            <table>
+                <thead><tr><th>ID</th><th>Email</th><th>Balance</th><th>Account</th></tr></thead>
+                <tbody>
+                ${pageItems.map(u=>`<tr><td>${u.id}</td><td>${u.email}</td><td>₦${parseFloat(u.wallet_balance||0).toLocaleString()}</td><td>${u.account_number||'-'}</td></tr>`).join('')}
+                </tbody>
+            </table>`;
+    const pages = Math.max(1, Math.ceil(users.length/per));
+    const pager = `<div style="margin-top:8px;">Page ${page} of ${pages} &nbsp; <button onclick="renderUsers(${Math.max(1,page-1)})">Prev</button> <button onclick="renderUsers(${Math.min(pages,page+1)})">Next</button></div>`;
+    document.getElementById('container').innerHTML = html + pager;
+}
+
+document.getElementById('q').addEventListener('input', ()=> renderUsers(1));
+document.getElementById('perpage').addEventListener('change', ()=> renderUsers(1));
+loadUsers();
+</script>
+</body>
+</html>

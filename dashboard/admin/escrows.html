@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin - Escrows</title>
+    <style>
+        body{font-family:Inter,system-ui; background:#050505;color:#fff;padding:24px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+        button{background:#d4af37;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+        .danger{background:#ff5555}
+        a{color:#d4af37}
+    </style>
+</head>
+<body>
+    <a href="index.html">← Back</a>
+    <h2>Escrows</h2>
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+        <input id="q" placeholder="Search escrows..." style="padding:8px;border-radius:6px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);color:#fff">
+        <select id="perpage"><option>10</option><option selected>20</option><option>50</option></select>
+    </div>
+    <div id="container">Loading escrows...</div>
+<script>
+const API = 'http://localhost:8000/api';
+async function loadEscrows(){
+    try{
+        const res = await fetch(`${API}/admin/escrows`, { headers: { 'x-admin-token': localStorage.getItem('orion_admin_token') || '' } });
+        const data = await res.json();
+        const esc = data.data;
+        window._admin_escrows = esc;
+        renderEscrows();
+    }catch(e){document.getElementById('container').innerText='Failed to load escrows'}
+}
+
+function renderEscrows(page=1){
+    const q = (document.getElementById('q').value||'').toLowerCase();
+    const per = parseInt(document.getElementById('perpage').value||20,10);
+    const esc = (window._admin_escrows || []).filter(e => (`${e.tx_ref||''} ${e.UserId||''} ${e.asset_id||''} ${e.escrow_status||e.status||''}`).toLowerCase().includes(q));
+    const start = (page-1)*per; const pageItems = esc.slice(start, start+per);
+    const html = `
+            <table>
+                <thead><tr><th>Ref</th><th>User</th><th>Asset</th><th>Share</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                ${pageItems.map(e=>`<tr>
+                    <td>${e.tx_ref||''}</td>
+                    <td>${e.UserId||''}</td>
+                    <td>${e.asset_id||''}</td>
+                    <td>${e.asset_share||''}</td>
+                    <td>₦${parseFloat(e.amount||0).toLocaleString()}</td>
+                    <td>${e.escrow_status||e.status||''}</td>
+                    <td>
+                        <button onclick="release('${e.tx_ref}')">Release</button>
+                        <button class="danger" onclick="cancel('${e.tx_ref}')">Cancel</button>
+                    </td>
+                </tr>`).join('')}
+                </tbody>
+            </table>`;
+    const pages = Math.max(1, Math.ceil(esc.length/per));
+    const pager = `<div style="margin-top:8px;">Page ${page} of ${pages} &nbsp; <button onclick="renderEscrows(${Math.max(1,page-1)})">Prev</button> <button onclick="renderEscrows(${Math.min(pages,page+1)})">Next</button></div>`;
+    document.getElementById('container').innerHTML = html + pager;
+}
+
+async function release(ref){
+    if(!confirm('Release escrow ' + ref + '?')) return;
+    try{
+        const res = await fetch(`${API}/escrow/release`, { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-token': localStorage.getItem('orion_admin_token') || ''}, body: JSON.stringify({ tx_ref: ref }) });
+        const data = await res.json();
+        if(res.ok) alert('Released'); else alert(data.error||'Failed');
+        loadEscrows();
+    }catch(e){alert('Server error')}
+}
+async function cancel(ref){
+    if(!confirm('Cancel escrow ' + ref + '? This refunds the buyer.')) return;
+    try{
+        const res = await fetch(`${API}/escrow/cancel`, { method: 'POST', headers: {'Content-Type':'application/json', 'x-admin-token': localStorage.getItem('orion_admin_token') || ''}, body: JSON.stringify({ tx_ref: ref }) });
+        const data = await res.json();
+        if(res.ok) alert('Cancelled and refunded'); else alert(data.error||'Failed');
+        loadEscrows();
+    }catch(e){alert('Server error')}
+}
+
+document.getElementById('q').addEventListener('input', ()=> renderEscrows(1));
+document.getElementById('perpage').addEventListener('change', ()=> renderEscrows(1));
+
+loadEscrows();
+</script>
+</body>
+</html>

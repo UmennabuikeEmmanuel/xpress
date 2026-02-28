@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin - Transactions</title>
+    <style>
+        body{font-family:Inter,system-ui; background:#050505;color:#fff;padding:24px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+        a{color:#d4af37}
+    </style>
+</head>
+<body>
+    <a href="index.html">← Back</a>
+    <h2>Transactions</h2>
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+        <input id="q" placeholder="Search transactions..." style="padding:8px;border-radius:6px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);color:#fff">
+        <select id="perpage"><option>10</option><option selected>20</option><option>50</option></select>
+    </div>
+    <div id="container">Loading transactions...</div>
+<script>
+const API = 'http://localhost:8000/api';
+async function loadTxs(){
+    try{
+        const res = await fetch(`${API}/admin/transactions`, { headers: { 'x-admin-token': localStorage.getItem('orion_admin_token') || '' } });
+        const data = await res.json();
+        const txs = data.data;
+        window._admin_txs = txs;
+        renderTxs();
+    }catch(e){document.getElementById('container').innerText='Failed to load transactions'}
+}
+
+function renderTxs(page=1){
+    const q = (document.getElementById('q').value||'').toLowerCase();
+    const per = parseInt(document.getElementById('perpage').value||20,10);
+    const txs = (window._admin_txs || []).filter(t => (`${t.tx_ref||''} ${t.UserId||''} ${t.type||''} ${t.status||''}`).toLowerCase().includes(q));
+    const start = (page-1)*per; const pageItems = txs.slice(start, start+per);
+    const html = `
+            <table>
+                <thead><tr><th>Ref</th><th>User</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody>
+                ${pageItems.map(t=>`<tr><td>${t.tx_ref||''}</td><td>${t.UserId||''}</td><td>${t.type}</td><td>₦${parseFloat(t.amount||0).toLocaleString()}</td><td>${t.status}</td><td>${new Date(t.createdAt).toLocaleString()}</td></tr>`).join('')}
+                </tbody>
+            </table>`;
+    const pages = Math.max(1, Math.ceil(txs.length/per));
+    const pager = `<div style="margin-top:8px;">Page ${page} of ${pages} &nbsp; <button onclick="renderTxs(${Math.max(1,page-1)})">Prev</button> <button onclick="renderTxs(${Math.min(pages,page+1)})">Next</button></div>`;
+    document.getElementById('container').innerHTML = html + pager;
+}
+
+document.getElementById('q').addEventListener('input', ()=> renderTxs(1));
+document.getElementById('perpage').addEventListener('change', ()=> renderTxs(1));
+loadTxs();
+</script>
+</body>
+</html>

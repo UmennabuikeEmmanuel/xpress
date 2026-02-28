@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ORION | Pro OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="/dashboard/users/dist/css/dashboard.css">
+    <style>
+         :root {
+     --bg: #050505;
+     --accent: #d4af37;
+     --accent-soft: rgba(212, 175, 55, 0.1);
+     --glass: rgba(255, 255, 255, 0.03);
+     --glass-border: rgba(255, 255, 255, 0.08);
+     --text: #ffffff;
+     --text-dim: #a0a0a0;
+     --card-bg: #0a0a0a;
+     --sidebar-width: 280px;
+ }
+
+ * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+     font-family: 'Inter', sans-serif;
+ }
+
+ body {
+     background: var(--bg);
+     color: var(--text);
+     height: 100vh;
+     display: flex;
+     overflow: hidden;
+ }
+
+ /* --- SIDEBAR --- */
+ aside {
+     width: var(--sidebar-width);
+     border-right: 1px solid var(--glass-border);
+     padding: 40px;
+     display: flex;
+     flex-direction: column;
+     justify-content: space-between;
+     background: var(--bg);
+     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+     z-index: 1001;
+ }
+
+ .menu {
+     list-style: none;
+     margin-top: 50px;
+ }
+
+ .menu li {
+     padding: 15px 20px;
+     border-radius: 12px;
+     color: var(--text-dim);
+     display: flex;
+     align-items: center;
+     gap: 15px;
+     cursor: pointer;
+     transition: 0.3s;
+     margin-bottom: 5px;
+ }
+
+ .menu li:hover,
+ .menu li.active {
+     background: var(--glass);
+     color: var(--accent);
+ }
+
+ .menu li.active {
+     border: 1px solid var(--accent-soft);
+     font-weight: 600;
+ }
+
+ /* --- MAIN CONTENT --- */
+ main {
+     flex: 1;
+     padding: 40px;
+     overflow-y: auto;
+     position: relative;
+     width: 100%;
+ }
+
+ .panel {
+     display: none;
+     animation: fadeIn 0.4s ease forwards;
+     max-width: 1100px;
+     margin: 0 auto;
+ }
+
+ .panel.active {
+     display: block;
+ }
+
+ /* --- CARDS & UI --- */
+ .card {
+     background: var(--card-bg);
+     border: 1px solid var(--glass-border);
+     border-radius: 24px;
+     padding: 30px;
+     margin-bottom: 25px;
+ }
+
+ .wallet-hero {
+     background: linear-gradient(135deg, var(--accent), #8a6d0d);
+     color: #000;
+     padding: 40px;
+     border-radius: 30px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+ }
+
+ .bank-item {
+     background: var(--glass);
+     border: 1px solid var(--glass-border);
+     padding: 20px;
+     border-radius: 18px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 12px;
+ }
+
+ /* --- SLIDE-OVER & PIN --- */
+ #withdraw-sidebar {
+     position: fixed;
+     right: -100%;
+     top: 0;
+     width: 400px;
+     height: 100%;
+     background: var(--card-bg);
+     border-left: 1px solid var(--glass-border);
+     z-index: 1100;
+     transition: 0.4s ease;
+     padding: 40px;
+ }
+
+ #overlay {
+     position: fixed;
+     inset: 0;
+     background: rgba(0, 0, 0, 0.8);
+     backdrop-filter: blur(8px);
+     display: none;
+     z-index: 1000;
+ }
+
+ .pin-dot {
+     width: 14px;
+     height: 14px;
+     border-radius: 50%;
+     border: 2px solid var(--glass-border);
+ }
+
+ /* --- UTILITIES --- */
+ input,
+ select {
+     background: var(--glass);
+     border: 1px solid var(--glass-border);
+     color: var(--text);
+     padding: 14px;
+     border-radius: 12px;
+     width: 100%;
+     outline: none;
+ }
+
+ select {
+     color: #444;
+ }
+
+ .btn-primary {
+     background: var(--accent);
+     color: #000;
+     border: none;
+     padding: 16px 24px;
+     border-radius: 12px;
+     font-weight: 900;
+     cursor: pointer;
+     transition: 0.3s;
+     width: 100%;
+ }
+
+ .mobile-toggle {
+     display: none;
+     background: var(--glass);
+     border: 1px solid var(--glass-border);
+     color: var(--text);
+     padding: 10px;
+     border-radius: 10px;
+     margin-bottom: 20px;
+ }
+
+ /* --- RESPONSIVENESS --- */
+ @media (max-width: 1024px) {
+     aside {
+         position: fixed;
+         left: -100%;
+         height: 100vh;
+     }
+
+     aside.open {
+         left: 0;
+     }
+
+     .mobile-toggle {
+         display: block;
+     }
+
+     .wallet-hero {
+         flex-direction: column;
+         text-align: center;
+         gap: 20px;
+     }
+
+     #withdraw-sidebar {
+         width: 100%;
+     }
+
+     main {
+         padding: 20px;
+     }
+ }
+
+ @keyframes fadeIn {
+     from {
+         opacity: 0;
+         transform: translateY(10px);
+     }
+
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
+ }
+
+ /* --- PROFILE SPECIFIC STYLES --- */
+ .profile-layout {
+     max-width: 900px;
+     margin: 0 auto;
+     animation: fadeIn 0.5s ease forwards;
+ }
+
+ .profile-header {
+     margin-bottom: 40px;
+     padding: 20px 0;
+     border-bottom: 1px solid var(--glass-border);
+ }
+
+ .user-meta {
+     display: flex;
+     align-items: center;
+     gap: 25px;
+ }
+
+ .avatar-large {
+     width: 80px;
+     height: 80px;
+     background: var(--glass);
+     border: 2px solid var(--accent);
+     border-radius: 50%;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 1.8rem;
+     font-weight: 900;
+     color: var(--accent);
+     box-shadow: 0 0 20px var(--accent-soft);
+ }
+
+ .profile-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+     gap: 25px;
+ }
+
+ .card-label {
+     color: var(--accent);
+     font-size: 0.7rem;
+     font-weight: 800;
+     margin-bottom: 20px;
+     letter-spacing: 2px;
+ }
+
+ .detail-row {
+     display: flex;
+     justify-content: space-between;
+     padding: 15px 0;
+     border-bottom: 1px solid var(--glass-border);
+     font-size: 0.95rem;
+ }
+
+ .copy-icon {
+     cursor: pointer;
+     color: var(--accent);
+     transition: 0.2s;
+ }
+
+ .copy-icon:hover {
+     transform: scale(1.2);
+ }
+
+ .pin-input-group {
+     display: flex;
+     gap: 15px;
+     margin-bottom: 20px;
+ }
+
+ /* Mobile Adjustments */
+ @media (max-width: 600px) {
+     .user-meta {
+         flex-direction: column;
+         text-align: center;
+     }
+
+     .profile-grid {
+         grid-template-columns: 1fr;
+     }
+
+     .pin-input-group {
+         flex-direction: column;
+     }
+ }
+
+ /* --- MARKETPLACE GRID --- */
+ .property-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+     gap: 30px;
+ }
+
+ /* --- PREMIUM CARD DESIGN --- */
+ .prop-card {
+     background: var(--card-bg);
+     border: 1px solid var(--glass-border);
+     border-radius: 28px;
+     overflow: hidden;
+     transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+ }
+
+ .prop-card:hover {
+     transform: translateY(-10px);
+     border-color: var(--accent);
+     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-soft);
+ }
+
+ /* FIX: This ensures the image is visible and high quality */
+ .prop-img-wrapper {
+     width: 100%;
+     height: 220px;
+     /* Fixed height so it's not a thin strip */
+     position: relative;
+     overflow: hidden;
+     background: #111;
+     /* Fallback color */
+ }
+
+ .prop-img-wrapper img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+     /* This makes it look like a pro photo */
+     transition: 0.6s ease;
+ }
+
+ .prop-card:hover img {
+     transform: scale(1.1);
+ }
+
+ .roi-tag {
+     position: absolute;
+     top: 15px;
+     left: 15px;
+     background: rgba(0, 0, 0, 0.7);
+     backdrop-filter: blur(10px);
+     border: 1px solid var(--accent);
+     color: var(--accent);
+     padding: 6px 12px;
+     border-radius: 12px;
+     font-size: 0.75rem;
+     font-weight: 900;
+ }
+
+ .prop-body {
+     padding: 24px;
+ }
+
+ .category-bar {
+     display: flex;
+     gap: 10px;
+     overflow-x: scroll;
+     width: 100%;
+ }
+
+ .category-bar::-webkit-scrollbar {
+     display: none;
+ }
+
+ .cat-pill {
+     padding: 10px 22px;
+     background: var(--glass);
+     border: 1px solid var(--glass-border);
+     border-radius: 50px;
+     color: var(--text-dim);
+     cursor: pointer;
+     font-size: 0.8rem;
+     transition: 0.3s;
+ }
+
+ .cat-pill.active {
+     background: var(--accent);
+     color: #000;
+     font-weight: 800;
+     border-color: var(--accent);
+ }
+
+
+ /* --- MODAL OVERLAY --- */
+ .detail-overlay {
+     display: none;
+     /* Controlled by JS */
+     position: fixed;
+     inset: 0;
+     background: rgba(0, 0, 0, 0.85);
+     backdrop-filter: blur(15px);
+     z-index: 9999;
+     padding: 20px;
+     overflow-y: auto;
+     animation: fadeIn 0.3s ease;
+ }
+
+ .detail-container {
+     max-width: 1100px;
+     width: calc(100% - 10px);
+     margin: 40px auto;
+     background: var(--card-bg);
+     border: 1px solid var(--glass-border);
+     border-radius: 20px;
+     position: relative;
+     overflow: hidden;
+     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+ }
+
+ .detail-layout {
+     display: grid;
+     grid-template-columns: 1.2fr 1fr;
+     gap: 0;
+     width: 100%;
+ }
+
+ @media (max-width: 900px) {
+     .detail-container {
+         width: calc(100% - 4px);
+         margin: 4px auto;
+         border-radius: 16px;
+     }
+
+     .detail-layout {
+         display: flex;
+         flex-direction: column;
+         justify-content: stretch;
+         align-items: stretch;
+     }
+
+     .detail-visuals {
+         border-right: none !important;
+         border-bottom: 1px solid var(--glass-border);
+         padding: 10px;
+     }
+ }
+
+ /* --- LEFT SIDE: VISUALS --- */
+ .detail-visuals {
+     padding: 10px;
+     border-right: 1px solid var(--glass-border);
+     margin: auto;
+ }
+
+ .slider-container {
+     position: relative;
+     height: 400px;
+     border-radius: 12px;
+     overflow: hidden;
+     background: #000;
+     margin-bottom: 20px;
+ }
+
+ /* Smaller slider on mobile */
+ @media (max-width: 600px) {
+     .slider-container {
+         height: 240px;
+         border-radius: 10px;
+     }
+
+     .detail-visuals .map-box {
+         height: 140px;
+     }
+
+     .detail-info {
+         padding: 20px;
+     }
+ }
+
+ .slider img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+     display: none;
+     transition: 0.5s;
+ }
+
+ .slider img.active {
+     display: block;
+     animation: scaleUp 0.6s ease;
+ }
+
+ .slider-btn {
+     position: absolute;
+     top: 50%;
+     transform: translateY(-50%);
+     background: rgba(0, 0, 0, 0.5);
+     border: none;
+     color: white;
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     cursor: pointer;
+     z-index: 10;
+     transition: 0.3s;
+ }
+
+ .slider-btn:hover {
+     background: var(--accent);
+     color: black;
+ }
+
+ .next {
+     right: 15px;
+ }
+
+ .prev {
+     left: 15px;
+ }
+
+ .doc-cta {
+     display: flex;
+     align-items: center;
+     gap: 15px;
+     padding: 18px;
+     background: var(--glass);
+     border: 1px solid var(--accent-soft);
+     border-radius: 15px;
+     text-decoration: none;
+     color: white;
+     transition: 0.3s;
+     margin-top: 10px;
+ }
+
+ .doc-cta:hover {
+     background: var(--accent-soft);
+     border-color: var(--accent);
+ }
+
+ .map-box {
+     width: 100%;
+     height: 180px;
+     background: #111;
+     border-radius: 20px;
+     border: 1px solid var(--glass-border);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     margin-top: 10px;
+     overflow: hidden;
+ }
+
+ /* --- RIGHT SIDE: INFO --- */
+ .detail-info {
+     padding: 40px;
+     display: flex;
+     flex-direction: column;
+ }
+
+ .premium-label {
+     color: var(--accent);
+     font-size: 0.7rem;
+     font-weight: 800;
+     letter-spacing: 2px;
+ }
+
+ .specs-grid {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr);
+     padding: 20px 0;
+     margin: 20px 0;
+     border-top: 1px solid var(--glass-border);
+     border-bottom: 1px solid var(--glass-border);
+ }
+
+ .spec-item {
+     text-align: center;
+     color: var(--text-dim);
+     font-size: 0.8rem;
+ }
+
+ .spec-item i {
+     display: block;
+     color: var(--accent);
+     font-size: 1.2rem;
+     margin-bottom: 5px;
+ }
+
+ .fractional-card {
+     background: var(--accent-soft);
+     border: 1px dashed var(--accent);
+     padding: 20px;
+     border-radius: 20px;
+     margin-top: 20px;
+ }
+
+ input[type=range] {
+     -webkit-appearance: none;
+     width: 100%;
+     height: 5px;
+     background: var(--glass-border);
+     border-radius: 5px;
+     margin: 15px 0;
+ }
+
+ input[type=range]::-webkit-slider-thumb {
+     -webkit-appearance: none;
+     height: 18px;
+     width: 18px;
+     border-radius: 50%;
+     background: var(--accent);
+     cursor: pointer;
+ }
+
+ .buy-action-card {
+     margin-top: auto;
+     padding: 25px;
+     width: calc(100% + 18px);
+     background: var(--glass);
+     border-radius: 24px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     gap: 10px;
+ }
+
+ .btn-primary {
+     background: var(--accent);
+     color: black;
+     border: none;
+     padding: 15px 15px;
+     border-radius: 12px;
+     font-weight: 800;
+     cursor: pointer;
+     transition: 0.3s;
+ }
+
+ .btn-primary:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 10px 20px var(--accent-soft);
+ }
+
+ .close-modal {
+     position: absolute;
+     top: 25px;
+     right: 25px;
+     background: var(--glass);
+     border: none;
+     color: white;
+     width: 40px;
+     height: 40px;
+     border-radius: 50%;
+     cursor: pointer;
+     z-index: 100;
+ }
+
+ /* Animations */
+ @keyframes fadeIn {
+     from {
+         opacity: 0;
+     }
+
+     to {
+         opacity: 1;
+     }
+ }
+
+ @keyframes scaleUp {
+     from {
+         transform: scale(1.1);
+         opacity: 0;
+     }
+
+     to {
+         transform: scale(1);
+         opacity: 1;
+     }
+ }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" onclick="closeWithdraw()"></div>
+
+    <aside id="sidebar">
+        <div>
+            <div style="font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;">ORION<span style="color:var(--accent)">.</span></div>
+            <ul class="menu">
+                <li onclick="nav('overview')" id="nav-overview" class="active"><i class="ph ph-grid-four"></i> Overview</li>
+                <li onclick="nav('wallet')" id="nav-wallet"><i class="ph ph-wallet"></i> Digital Wallet</li>
+                <li onclick="nav('profile')" id="nav-security"><i class="ph ph-user"></i> Profile</li>
+                <li onclick="nav('properties')" id="nav-properties"><i class="ph ph-building"></i> Properties</li>
+            </ul>
+        </div>
+        <div style="color: var(--text-dim); font-size: 0.8rem; border-top: 1px solid var(--glass-border); padding-top: 20px; display:flex; justify-content:space-between; gap:12px; align-items:center;">
+            <div><i class="ph ph-info"></i> System v4.0.2 Secure</div>
+            <div><a href="http://localhost:8000/dashboar/admin/" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:700;">Admin</a></div>
+        </div>
+    </aside>
+
+    <main>
+        <button class="mobile-toggle" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+
+        <section id="panel-overview" class="panel active">
+            <h2 style="margin-bottom: 25px;">Account Performance</h2>
+            <div class="card">
+                <p style="color:var(--accent); font-size:0.7rem; font-weight:800; margin-bottom:25px; letter-spacing: 2px;">TOTAL WEALTH ANALYTICS</p>
+                <div style="height: 300px; width: 100%;"><canvas id="wealthChart"></canvas></div>
+            </div>
+        </section>
+
+        <section id="panel-wallet" class="panel">
+            <div class="wallet-hero">
+                <div>
+                    <p style="text-transform:uppercase; font-size:0.7rem; font-weight:800; opacity: 0.8;">Available Balance</p>
+                    <h1 id="main-balance" style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; margin: 5px 0;">₦0.00</h1>
+                    <p id="user-email" style="font-size: 0.9rem;">loading account...</p>
+                </div>
+                <button class="btn-primary" style="width: auto;" onclick="openWithdraw()">Withdraw Funds</button>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Transaction Ledger</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="tx-search" placeholder="Search Ref..." oninput="filterHistory()" style="padding: 8px 15px; width: 150px;">
+                    </div>
+                </div>
+                <div id="history-list" style="opacity:0.5;">
+                    <!-- Sample Transaction: Deposit -->
+                    <div class="bank-item">
+                        <div>
+                            <strong style="font-size:0.95rem;">Wallet Top-up</strong><br>
+                            <small style="color:var(--text-dim)">2026-02-05 • DEP-12345</small>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-weight:900; color:#00ff88;">
+                                +₦5,000.00
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sample Transaction: Withdrawal -->
+                    <div class="bank-item">
+                        <div>
+                            <strong style="font-size:0.95rem;">Transfer to Bank</strong><br>
+                            <small style="color:var(--text-dim)">2026-02-04 • WTH-67890</small>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-weight:900; color:#fff;">
+                                -₦2,500.00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<section id="panel-profile" class="panel profile-layout active">
+    <div class="profile-header">
+        <div class="user-meta">
+            <div class="avatar-large" id="profile-initials">UE</div>
+            <div>
+                <h2 id="profile-name">User Account</h2>
+                <p id="profile-email" style="color: var(--text-dim);">loading@orion.com</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <div class="card">
+            <p class="card-label">VIRTUAL DEPOSIT ACCOUNT</p>
+            <div class="detail-row">
+                <span>Bank Name</span>
+                <strong id="profile-bank">Fetching...</strong>
+            </div>
+            <div class="detail-row">
+                <span>Account Number</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <strong id="profile-acc-num">0000000000</strong>
+                    <i class="ph ph-copy copy-icon" onclick="copyAcc()"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <p class="card-label">SECURITY PROTOCOL</p>
+            <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px;">
+                Update your 4-digit transaction PIN. This is required for all withdrawals.
+            </p>
+            <div class="pin-input-group">
+                <input type="password" id="new-pin" maxlength="4" placeholder="New PIN">
+                <input type="password" id="new-pin-confirm" maxlength="4" placeholder="Confirm">
+            </div>
+            <button class="btn-primary" onclick="setPin()">UPDATE SECURITY PIN</button>
+            <p id="pin-msg" style="margin-top:12px; font-size: 0.8rem; text-align: center;"></p>
+        </div>
+    </div>
+
+
+       <div class="card">
+            <p class="card-label">SECURITY PROTOCOL</p>
+            <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px;">
+                Update your 4-digit transaction PIN. This is required for all withdrawals.
+            </p>
+            <div class="pin-input-group">
+                <input type="password" id="new-pin" maxlength="4" placeholder="New PIN">
+                <input type="password" id="new-pin-confirm" maxlength="4" placeholder="Confirm">
+            </div>
+            <button class="btn-primary" onclick="setPin()">UPDATE SECURITY PIN</button>
+            <p id="pin-msg" style="margin-top:12px; font-size: 0.8rem; text-align: center;"></p>
+        </div>
+
+</section>
+
+<section id="panel-properties" class="panel">
+    <div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <p style="color: var(--accent); font-size: 0.7rem; font-weight: 900; letter-spacing: 3px; margin-bottom: 8px;">ASSET MARKETPLACE</p>
+            <h2 style="font-size: 2rem; font-weight: 900;">Premium Real Estate</h2>
+        </div>
+        <div class="category-bar" id="category-list">
+            </div>
+    </div>
+
+    <div class="property-grid" id="property-list">
+        </div>
+</section>
+    </main>
+
+    <div id="withdraw-sidebar">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Secure Transfer</h2>
+            <i class="ph ph-x" onclick="closeWithdraw()" style="cursor:pointer; font-size:1.5rem;"></i>
+        </div>
+        
+        <div style="margin-top:40px; display:flex; flex-direction:column; gap:20px;">
+            <div>
+                <label style="font-size:0.7rem; color:var(--accent); font-weight:800;">AMOUNT (NGN)</label>
+                <input type="number" id="w-amount" placeholder="5,000.00">
+            </div>
+            <div>
+                <label style="font-size:0.7rem; color:var(--accent); font-weight:800;">SELECT BANK</label>
+                <select id="w-bank">
+                    <option value="044">Access Bank</option>
+                    <option value="058">GTBank</option>
+                    <option value="011">First Bank</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.7rem; color:var(--accent); font-weight:800;">ACCOUNT NUMBER</label>
+                <input type="text" id="w-account" maxlength="10" placeholder="0123456789">
+                <div id="res-name" style="margin-top:10px; font-weight:700; color:var(--accent); display:none; font-size:0.85rem;"></div>
+            </div>
+            <button class="btn-primary" style="margin-top:20px;" onclick="showPinScreen()">AUTHORIZE</button>
+        </div>
+
+        <div id="pin-screen" style="display:none; position:absolute; inset:0; background:var(--card-bg); flex-direction:column; align-items:center; justify-content:center; gap:30px; padding:40px; z-index:5;">
+            <i class="ph ph-shield-check" style="font-size:4rem; color:var(--accent);"></i>
+            <h3 style="text-align:center;">Enter 4-Digit Security PIN</h3>
+            <div style="display:flex; gap:20px;">
+                <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+            </div>
+            <input type="password" id="pin-input" maxlength="4" style="position:absolute; opacity:0; width:100%; height:50px; cursor:pointer;">
+            <p onclick="hidePinScreen()" style="cursor:pointer; color:var(--text-dim);">Cancel Authorization</p>
+        </div>
+    </div>
+
+    <div id="property-modal" class="detail-overlay">
+        <div class="detail-container">
+            <button class="close-modal" onclick="closeModal()"><i class="ph ph-x"></i></button>
+
+            <div class="detail-layout">
+                <div class="detail-visuals">
+                    <div class="slider-container">
+                        <div id="modal-slider" class="slider"></div>
+                        <button class="slider-btn prev" onclick="changeSlide(-1)"><i class="ph ph-caret-left"></i></button>
+                        <button class="slider-btn next" onclick="changeSlide(1)"><i class="ph ph-caret-right"></i></button>
+                    </div>
+
+                    <div class="doc-section">
+                        <p class="premium-label">VERIFICATION</p>
+                        <a href="#" class="doc-cta">
+                            <i class="ph ph-file-pdf"></i>
+                            <div>
+                                <span style="display:block; font-size:0.9rem; font-weight:600;">Certificate of Occupancy</span>
+                                <span style="font-size:0.7rem; color:var(--text-dim);">Document ID: #ORN-7721-LKS</span>
+                            </div>
+                            <i class="ph ph-seal-check" style="color:var(--accent); margin-left:auto;"></i>
+                        </a>
+                    </div>
+
+                    <div class="map-section" style="margin-top:25px;">
+                        <p class="premium-label">LOCATION MAP</p>
+                        <div class="map-box">
+                            <i class="ph ph-map-trifold" style="font-size:2rem; color:var(--glass-border);"></i>
+                            <span style="margin-left:10px; color:var(--text-dim); font-size:0.8rem;">Map View: <span id="m-loc-text">Lekki, Lagos</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-info">
+                    <span id="m-cat" class="premium-label">CATEGORY</span>
+                    <h1 id="m-name" style="margin:10px 0; font-size:2rem;">Property Name</h1>
+                    <p id="m-loc" style="color:var(--text-dim); font-size:0.9rem;"><i class="ph ph-map-pin"></i> Location</p>
+
+                    <div class="specs-grid">
+                        <div class="spec-item"><i class="ph ph-bed"></i><span id="m-beds">4 Beds</span></div>
+                        <div class="spec-item"><i class="ph ph-bathtub"></i><span id="m-baths">3 Baths</span></div>
+                        <div class="spec-item"><i class="ph ph-selection-all"></i><span id="m-sqft">1,500 sqft</span></div>
+                    </div>
+
+                    <div id="fractional-ui" class="fractional-card" style="display:none;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="premium-label">OWNERSHIP SHARE</span>
+                            <span id="share-display" style="color:var(--accent); font-weight:900;">10%</span>
+                        </div>
+                        <input type="range" id="share-slider" min="1" max="100" value="10" oninput="updatePrice()">
+                        <p style="font-size:0.65rem; color:var(--text-dim);">Select percentage of the property you wish to own.</p>
+                    </div>
+
+                    <div class="description" style="margin-top:25px;">
+                        <h4 style="margin-bottom:10px;">The Asset</h4>
+                        <p id="m-desc" style="font-size:0.85rem; color:var(--text-dim); line-height:1.6;"></p>
+                    </div>
+
+                    <div class="buy-action-card">
+                        <div>
+                            <p style="font-size:0.6rem; color:var(--accent); font-weight:800; letter-spacing:1px;">TOTAL INVESTMENT</p>
+                            <h2 id="m-price">₦0.00</h2>
+                        </div>
+                        <button class="btn-primary" onclick="securePurchaseAsset()">SECURE ASSET</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+         const API = "http://localhost:8000/api";
+    let txCache = [];
+    let wealthChartInstance = null;
+
+    // --- 1. SESSION & INITIALIZATION ---
+    window.onload = () => {
+        const userId = localStorage.getItem('orion_user_id');
+        const token = localStorage.getItem('orion_token');
+
+        if (!userId || !token) {
+            // Redirect if not logged in
+            window.location.href = API + '/auth'; 
+        } else {
+            // Start the dashboard
+            syncData();
+            nav('overview'); 
+        }
+    };
+
+    async function syncData() {
+        // Use the ID from localStorage instead of the hardcoded USER_ID = 1
+        const userId = localStorage.getItem('orion_user_id');
+        
+        try {
+            console.log("Syncing data for user:", userId);
+            
+            // Fetch Balance & Email
+            const res = await fetch(`${API}/balance/${userId}`);
+            const data = await res.json();
+            
+            if (res.ok) {
+                document.getElementById('main-balance').innerText = `₦${parseFloat(data.balance).toLocaleString()}`;
+                document.getElementById('user-email').innerText = data.email;
+            }
+
+            // Fetch History
+            const hRes = await fetch(`${API}/transactions/${userId}`);
+            txCache = await hRes.json();
+
+            if (Array.isArray(txCache) && txCache.length > 0) {
+                renderHistory(txCache);
+                updateChart(txCache);
+                // Remove sample opacity once real data loads
+                document.getElementById('history-list').style.opacity = '1';
+            } else {
+                document.getElementById('history-list').innerHTML = `
+                    <div style="text-align:center; opacity:0.5; padding:40px;">
+                        <i class="ph ph-receipt" style="font-size:2rem;"></i>
+                        <p>No transactions found.</p>
+                    </div>`;
+            }
+        } catch (e) { 
+            console.error("Sync failed:", e);
+            document.getElementById('history-list').innerHTML = `<p style="color:red; text-align:center;">Connection Error: Ensure Backend is running.</p>`;
+        }
+    }
+
+    // prfile 
+    async function syncProfile() {
+    const userId = localStorage.getItem('orion_user_id') || 1;
+    
+    try {
+        const res = await fetch(`${API}/balance/${userId}`);
+        const data = await res.json();
+
+        if (res.ok) {
+            // Update Text Fields
+            document.getElementById('profile-email').innerText = data.email;
+            document.getElementById('profile-bank').innerText = data.bank_name || "Not Assigned";
+            document.getElementById('profile-acc-num').innerText = data.account_number || "0000000000";
+            
+            // Generate Initials for Avatar
+            const initials = data.email.substring(0, 2).toUpperCase();
+            document.getElementById('profile-initials').innerText = initials;
+        }
+    } catch (e) {
+        console.error("Profile sync failed", e);
+    }
+}
+
+// Utility to copy account number
+function copyAcc() {
+    const num = document.getElementById('profile-acc-num').innerText;
+    navigator.clipboard.writeText(num);
+    alert("Account number copied to clipboard!");
+}
+
+// Call this when the profile page loads
+syncProfile();
+    // !End profile
+
+    // --- Security: Set PIN ---
+    async function setPin() {
+        const pin = document.getElementById('new-pin').value;
+        const confirm = document.getElementById('new-pin-confirm').value;
+        const msg = document.getElementById('pin-msg');
+        const userId = localStorage.getItem('orion_user_id');
+
+        msg.innerText = '';
+        if (!pin || pin.length !== 4 || pin !== confirm) {
+            msg.style.color = 'var(--error)';
+            msg.innerText = 'PINs must match and be 4 digits.';
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/auth/set-pin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, pin })
+            });
+
+            if (res.ok) {
+                msg.style.color = 'var(--accent)';
+                msg.innerText = 'PIN set successfully.';
+                document.getElementById('new-pin').value = '';
+                document.getElementById('new-pin-confirm').value = '';
+            } else {
+                const { error } = await res.json();
+                msg.style.color = 'var(--error)';
+                msg.innerText = error || 'Failed to set PIN';
+            }
+        } catch (e) {
+            msg.style.color = 'var(--error)';
+            msg.innerText = 'Server error';
+        }
+    }
+
+    // --- 2. PIN LOGIC (server-validated) ---
+    document.getElementById('pin-input').addEventListener('input', async (e) => {
+        const val = e.target.value;
+        const dots = document.querySelectorAll('.pin-dot');
+        const userId = localStorage.getItem('orion_user_id');
+
+        // Update visual dots
+        dots.forEach((d, i) => {
+            d.style.background = i < val.length ? 'var(--accent)' : 'none';
+        });
+
+        // Only check when exactly 4 digits are entered
+        if (val.length === 4) {
+            try {
+                const res = await fetch(`${API}/auth/validate-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, pin: val })
+                });
+
+                if (res.ok) {
+                    await finalizeWithdrawal();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Incorrect PIN');
+                    e.target.value = ""; // Clear the input
+                    dots.forEach(d => d.style.background = 'none'); // Reset dots
+                }
+            } catch (err) {
+                alert('PIN validation failed');
+                e.target.value = "";
+                dots.forEach(d => d.style.background = 'none');
+            }
+        }
+    });
+
+    // --- 3. NAVIGATION & SIDEBAR ---
+    function nav(id) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.menu li').forEach(l => l.classList.remove('active'));
+        
+        const targetPanel = document.getElementById('panel-' + id);
+        const targetNav = document.getElementById('nav-' + id);
+        
+        if(targetPanel) targetPanel.classList.add('active');
+        if(targetNav) targetNav.classList.add('active');
+        
+        if(window.innerWidth <= 1024) toggleSidebar(false);
+    }
+
+    function toggleSidebar(force) {
+        const sb = document.getElementById('sidebar');
+        sb.classList.toggle('open', force);
+        document.getElementById('overlay').style.display = sb.classList.contains('open') ? 'block' : 'none';
+    }
+
+    // --- 4. WITHDRAWAL UI ---
+    function openWithdraw() { 
+        document.getElementById('withdraw-sidebar').style.right = '0'; 
+        document.getElementById('overlay').style.display = 'block'; 
+    }
+
+    function closeWithdraw() { 
+        document.getElementById('withdraw-sidebar').style.right = '-100%'; 
+        document.getElementById('overlay').style.display = 'none'; 
+        hidePinScreen();
+    }
+
+    function showPinScreen() { 
+        const amt = document.getElementById('w-amount').value;
+        if(!amt || amt <= 0) return alert("Please enter a valid amount");
+        
+        document.getElementById('pin-screen').style.display = 'flex'; 
+        document.getElementById('pin-input').focus(); 
+    }
+
+    function hidePinScreen() { 
+        document.getElementById('pin-screen').style.display = 'none'; 
+        document.getElementById('pin-input').value = ""; 
+        document.querySelectorAll('.pin-dot').forEach(d => d.style.background = 'none');
+    }
+
+    async function finalizeWithdrawal() {
+        const userId = localStorage.getItem('orion_user_id');
+        const body = {
+            userId: userId,
+            amount: document.getElementById('w-amount').value,
+            account_bank: document.getElementById('w-bank').value,
+            account_number: document.getElementById('w-account').value
+        };
+
+        try {
+            const res = await fetch(`${API}/withdraw`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            
+            if(res.ok) {
+                alert("Withdrawal Processed Successfully");
+                closeWithdraw();
+                syncData();
+            } else {
+                const err = await res.json();
+                alert(err.error || "Withdrawal failed");
+            }
+        } catch (e) {
+            alert("Server Error during withdrawal");
+        }
+    }
+    
+     
+    // --- 5. LEDGER & CHART ---
+    function renderHistory(list) {
+        const container = document.getElementById('history-list');
+        container.innerHTML = list.map(tx => `
+            <div class="bank-item">
+                <div>
+                    <strong style="font-size:0.95rem;">${tx.narration || 'Transfer'}</strong><br>
+                    <small style="color:var(--text-dim)">${new Date(tx.createdAt).toLocaleDateString()} • ${tx.tx_ref}</small>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-weight:900; color:${tx.type === 'deposit' ? '#00ff88' : '#fff'}">
+                        ${tx.type === 'deposit' ? '+' : '-'}₦${parseFloat(tx.amount).toLocaleString()}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateChart(data) {
+        const canvas = document.getElementById('wealthChart');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if(wealthChartInstance) wealthChartInstance.destroy();
+        
+        const reversedData = [...data].reverse();
+        let balance = 0;
+        const points = reversedData.map(t => {
+            balance += (t.type === 'deposit' ? parseFloat(t.amount) : -parseFloat(t.amount));
+            return balance;
+        });
+
+        wealthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: reversedData.map(t => new Date(t.createdAt).toLocaleDateString()),
+                datasets: [{ 
+                    data: points, 
+                    borderColor: '#d4af37', 
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666' } } }
+            }
+        });
+    }
+
+    // 1. Your Data
+const assets = [
+    { id: 1, cat: "Residential", name: "Azure Heights Estate", loc: "Lekki Phase 1", price: 100, roi: "+12%", img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800" },
+    { id: 2, cat: "Land", name: "Orion Acres", loc: "Epe, Lagos", price: 100, roi: "+25%", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800" },
+    { id: 3, cat: "Commercial", name: "Tech Hub Office", loc: "Yaba, Lagos", price: 100, roi: "+18%", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" }
+];
+
+const cats = ["All", "Land", "Residential", "Commercial", "Distressed"];
+
+// 2. The Render Function
+function initMarket() {
+    // Render Categories
+    document.getElementById('category-list').innerHTML = cats.map(c => `
+        <div class="cat-pill ${c === 'All' ? 'active' : ''}" onclick="filterAssets(this, '${c}')">${c}</div>
+    `).join('');
+
+    renderCards("All");
+}
+
+    function renderCards(filter) {
+    const list = document.getElementById('property-list');
+    const filtered = filter === "All" ? assets : assets.filter(a => a.cat === filter);
+    // * Render Property Cards
+    list.innerHTML = filtered.map((a) => `
+        <div class="prop-card">
+            <div class="prop-img-wrapper">
+                <img src="${a.img}" alt="property">
+                <div class="roi-tag">${a.roi} ROI</div>
+            </div>
+            <div class="prop-body">
+                <p style="color:var(--accent); font-size:0.65rem; font-weight:800; margin-bottom:5px;">${a.cat.toUpperCase()}</p>
+                <h3 style="margin-bottom:10px;">${a.name}</h3>
+                <p style="color:var(--text-dim); font-size:0.8rem; margin-bottom:20px;"><i class="ph ph-map-pin"></i> ${a.loc}</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--glass-border); padding-top:20px;">
+                    <div>
+                        <span style="font-size:1.2rem; font-weight:900;">₦${a.price.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn-primary" style="width:auto; padding:10px 18px;" onclick="openProperty(${a.id})">VIEW</button>
+                        <button class="btn-primary" style="width:auto; padding:10px 18px;" onclick="openBuyModal(${a.id})">BUY</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterAssets(el, c) {
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderCards(c);
+}
+
+// 3. Update your NAV function to call the market init
+function nav(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.menu li').forEach(l => l.classList.remove('active'));
+    
+    const targetPanel = document.getElementById('panel-' + id);
+    const targetNav = document.getElementById('nav-' + id);
+    
+    if(targetPanel) targetPanel.classList.add('active');
+    if(targetNav) targetNav.classList.add('active');
+
+    // THIS IS THE CRITICAL PART:
+    if(id === 'properties') {
+        initMarket();
+    }
+
+    if(window.innerWidth <= 1024) toggleSidebar(false);
+}
+
+        // property details (merge data from assets and optional propertyData overrides)
+        const propertyData = [
+            {
+                id: 1,
+                isFractional: true,
+                minShare: 5,
+                desc: "High-yield residential asset in Lagos' prime district. Features modern architecture, 24/7 security, and high rental demand.",
+                images: [
+                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200",
+                    "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1200"
+                ]
+            }
+        ];
+
+        let currentImgIndex = 0;
+        let activeAsset = null;
+
+        function openProperty(id) {
+            // Try to find richer propertyData first, otherwise fallback to assets
+            const override = propertyData.find(p => p.id === id);
+            const base = assets.find(a => a.id === id);
+            if (!base && !override) return;
+
+            // Build a normalized activeAsset object using fallback values
+            activeAsset = Object.assign({}, base || {}, override || {});
+
+            // Ensure images array
+            if (!activeAsset.images) activeAsset.images = base && base.img ? [base.img] : [];
+            activeAsset.isFractional = !!activeAsset.isFractional;
+
+            // Update Text
+            document.getElementById('m-name').innerText = activeAsset.name || 'Property';
+            document.getElementById('m-cat').innerText = (activeAsset.cat || '').toUpperCase();
+            document.getElementById('m-loc').innerHTML = `<i class="ph ph-map-pin"></i> ${activeAsset.loc || ''}`;
+            document.getElementById('m-loc-text').innerText = activeAsset.loc || '';
+            document.getElementById('m-beds').innerText = (activeAsset.beds || 0) + " Beds";
+            document.getElementById('m-baths').innerText = (activeAsset.baths || 0) + " Baths";
+            document.getElementById('m-sqft').innerText = (activeAsset.sqft || '') + " sqft";
+            document.getElementById('m-desc').innerText = activeAsset.desc || '';
+
+            // Handle Fractional
+            const fracUI = document.getElementById('fractional-ui');
+            if (activeAsset.isFractional) {
+                fracUI.style.display = 'block';
+                document.getElementById('share-slider').min = activeAsset.minShare || 1;
+                document.getElementById('share-slider').value = activeAsset.minShare || 1;
+                updatePrice();
+            } else {
+                fracUI.style.display = 'none';
+                document.getElementById('m-price').innerText = `₦${(activeAsset.price || 0).toLocaleString()}`;
+            }
+
+            // Load Slider Images
+            const slider = document.getElementById('modal-slider');
+            slider.innerHTML = activeAsset.images.map((img, i) => `
+                <img src="${img}" class="${i === 0 ? 'active' : ''}">
+            `).join('');
+
+            // Slider controls: hide if only one or zero images
+            const prevBtn = document.querySelector('#property-modal .slider-btn.prev');
+            const nextBtn = document.querySelector('#property-modal .slider-btn.next');
+            const imgs = slider.querySelectorAll('img');
+            if (!imgs || imgs.length === 0) {
+                if (prevBtn) prevBtn.style.display = 'none';
+                if (nextBtn) nextBtn.style.display = 'none';
+            } else if (imgs.length === 1) {
+                if (prevBtn) prevBtn.style.display = 'none';
+                if (nextBtn) nextBtn.style.display = 'none';
+                imgs[0].classList.add('active');
+            } else {
+                if (prevBtn) prevBtn.style.display = 'block';
+                if (nextBtn) nextBtn.style.display = 'block';
+            }
+
+            currentImgIndex = 0;
+            document.getElementById('property-modal').style.display = 'block';
+        }
+
+        function updatePrice() {
+            const share = document.getElementById('share-slider').value;
+            const price = activeAsset.price * (share / 100);
+            document.getElementById('share-display').innerText = share + "% Share";
+            document.getElementById('m-price').innerText = `₦${price.toLocaleString()}`;
+        }
+
+        function changeSlide(dir) {
+                const imgs = document.querySelectorAll('#modal-slider img');
+                if (!imgs || imgs.length === 0) return; // nothing to do
+                if (imgs.length === 1) return; // single image, no slide
+                // ensure current index in bounds
+                if (currentImgIndex < 0 || currentImgIndex >= imgs.length) currentImgIndex = 0;
+                imgs[currentImgIndex].classList.remove('active');
+                currentImgIndex = (currentImgIndex + dir + imgs.length) % imgs.length;
+                imgs[currentImgIndex].classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('property-modal').style.display = 'none';
+        }
+
+        // Open buy flow: prompt for share (if fractional) then call backend purchase API
+        async function openBuyModal(id) {
+            const userId = localStorage.getItem('orion_user_id');
+            if (!userId) return alert('Please login first');
+
+            const asset = assets.find(a => a.id === id);
+            if (!asset) return alert('Asset not found');
+
+            let share = 100; // default full purchase
+            const override = propertyData.find(p => p.id === id);
+            const isFractional = (override && override.isFractional) || false;
+            if (isFractional) {
+                const input = prompt(`Enter percentage share to buy (min ${override.minShare || 1}%):`, `${override.minShare || 5}`);
+                if (!input) return;
+                share = parseFloat(input);
+                if (isNaN(share) || share <= 0 || share > 100) return alert('Invalid share percent');
+                if (override.minShare && share < override.minShare) return alert('Selected share below minimum');
+            }
+
+            const amount = Math.round((asset.price || 0) * (share / 100));
+            const confirmMsg = `Confirm purchase of ${share}% for ₦${amount.toLocaleString()}?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API}/purchase`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, amount, assetId: id, assetShare: share })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Purchase reserved into escrow. Reference: ' + data.data.tx_ref);
+                    syncData();
+                } else {
+                    alert(data.error || 'Purchase failed');
+                }
+            } catch (err) {
+                console.error('Purchase error', err);
+                alert('Server error during purchase');
+            }
+        }
+
+                // Secure purchase from modal using active asset data
+        async function securePurchaseAsset() {
+            if (!activeAsset) return alert('Asset not loaded');
+            const userId = localStorage.getItem('orion_user_id');
+            if (!userId) return alert('Please login first');
+
+            // Get share percentage from slider if fractional
+            let share = 100;
+            const isFractional = activeAsset.isFractional || false;
+            if (isFractional) {
+                const sliderVal = document.getElementById('share-slider').value;
+                share = parseFloat(sliderVal);
+            }
+
+            const amount = Math.round((activeAsset.price || 0) * (share / 100));
+            const confirmMsg = `Confirm purchase of ${share}% for ₦${amount.toLocaleString()}?`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API}/purchase`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId,
+                        amount,
+                        assetId: activeAsset.id,
+                        assetShare: share
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Purchase reserved into escrow. Reference: ' + data.data.tx_ref);
+                    closeModal();
+                    syncData();
+                } else {
+                    alert(data.error || 'Purchase failed');
+                }
+            } catch (err) {
+                console.error('Secure purchase error', err);
+                alert('Server error during purchase');
+            }
+        }
+
+    </script>
+</body>
+</html>
