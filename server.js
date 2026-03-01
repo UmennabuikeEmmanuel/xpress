@@ -7,10 +7,7 @@ const adminAuth = require('./middleware/admin.middleware');
 const controller = require('./controller/wallet.controller');
 // const AuthService = require('./service/auth.service');
 const auth = require('./controller/user.controller');
-console.log("==== ENV DEBUG START ====");
-console.log("DB_HOST:", process.env.DB_HOST);
-console.log("DATABASE_URL:", process.env.DATABASE_URL);
-console.log("==== ENV DEBUG END ====");
+
 
 require('dotenv').config();
 
