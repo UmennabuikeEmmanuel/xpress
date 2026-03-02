@@ -52,7 +52,7 @@ app.post('/api/auth/login', auth.login);
 app.get('/api/auth', auth.authPage);
 app.post('/api/auth/set-pin', auth.setPin);
 app.post('/api/auth/validate-pin', auth.validatePin);
-app.get('/', (req, res) => {
+app.get('/dash', (req, res) => {
     res.sendFile(join(__dirname, '/dashboard/users/dashboard.html'));
 });
 
