@@ -126,7 +126,7 @@ static async initiateTransfer(userId, amount, account_bank, account_number) {
                 currency: "NGN",
                 narration: "Withdrawal from wallet",
                 reference: tx_ref,
-                callback_url: "https://pseudopodal-jaleesa-guardedly.ngrok-free.dev/api/webhooks" 
+                callback_url: "https://xpress-eiuc.onrender.com/api/webhooks" 
             });
 
             // 7. If API succeeds, COMMIT the database changes
