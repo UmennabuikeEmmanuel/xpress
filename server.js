@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard/admin', (req, res) => {
     // res.sendFile();
-    console.log(join(__dirname, '/dashboard/admin/admin.html'));
+    console.log(join(__dirname, '/dashboard/users/auth.html'));
 });
 
 
