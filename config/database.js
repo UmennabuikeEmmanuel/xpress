@@ -1,15 +1,19 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME || 'fintech_db',
-    process.env.DB_USER || 'postgres',
-    process.env.DB_PASS || 'Plasmodium@1',
-    {
-        host: process.env.DB_HOST || 'localhost',
-        dialect: 'postgres',
-        logging: false,
-    }
-);
+if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set");
+}
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
+    logging: false,
+});
 
 module.exports = sequelize;
