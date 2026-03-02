@@ -192,7 +192,7 @@
                         // Successful login/signup — handle both response shapes
                         localStorage.setItem('orion_token', data.token);
                         localStorage.setItem('orion_user_id', data.userId || (data.user && data.user.id));
-                        window.location.href = '/';
+                        window.location.href = '/dash';
                     }
                 } else {
                     alert(data.error || "Operation failed");
