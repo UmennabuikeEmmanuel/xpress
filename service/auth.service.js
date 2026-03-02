@@ -77,7 +77,7 @@ class AuthService {
         await user.update({ resetToken, resetTokenExpiry: expiry });
 
         // Simulate sending email
-        console.log(`[ORION MAIL] To: ${email} | Link: http://localhost:3000/reset-password.html?token=${resetToken}`);
+        console.log(`[ORION MAIL] To: ${email} | Link: https://xpress-eiuc.onrender.com//reset-password.html?token=${resetToken}`);
         
         return { message: "Check your console (simulated email)" };
     }
