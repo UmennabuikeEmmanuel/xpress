@@ -69,7 +69,7 @@ exports.withdraw = async (req, res) => {
                 amount: amount,
                 currency: "NGN",
                 reference: localTx.tx_ref, // Link our DB ID to FLW
-                callback_url: "https://pseudopodal-jaleesa-guardedly.ngrok-free.dev/webhooks"
+                callback_url: "https://xpress-eiuc.onrender.com/webhooks"
             });
 
             res.status(200).json(transfer.data);
