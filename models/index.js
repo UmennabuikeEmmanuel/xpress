@@ -4,7 +4,7 @@ const sequelize = require('./../config/database');
 // 1. User Model (Stores Balance & Virtual Account)
 const User = sequelize.define('User', {
     email: { type: DataTypes.STRING, unique: true, allowNull: false },
-    password: { type: DataTypes.STRING, allowNull: false, defaultValue: "Orion@apex" }, // ADD THIS
+    password: { type: DataTypes.STRING, allowNull: false }, // ADD THIS
     firstname: { type: DataTypes.STRING },
     lastname: { type: DataTypes.STRING },
     pin: { type: DataTypes.STRING },
